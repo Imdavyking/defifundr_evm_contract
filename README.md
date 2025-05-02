@@ -26,7 +26,6 @@ defifundr_evm_contract/
 
 ### Prerequisites
 
-- Node.js (v16+)
 - npm or yarn
 - Hardhat CLI
 
