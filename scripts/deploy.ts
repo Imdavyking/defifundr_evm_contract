@@ -1,19 +1,21 @@
 import fs from "fs";
 import { ethers } from "hardhat";
 import path from "path";
-import { verify } from "./verify";
+import { verify } from "../utils/verify";
+import deployParams from "../utils/deploy.params";
 
 async function main() {
   // Get the current timestamp
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  // Set unlock time to 1 year from now
-  const unlockTime = currentTimestamp + 365 * 24 * 60 * 60;
 
   // Get network details
   const network = await ethers.provider.getNetwork();
   console.log(
     `Deploying to network: ${network.name} (chain ID: ${network.chainId})`
   );
+
+  // Set unlock time based on the network
+  const unlockTime = deployParams[network.name]?.unlockTime;
 
   // Deploy the Lock contract
   console.log(

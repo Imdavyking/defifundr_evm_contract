@@ -13,9 +13,10 @@
   "include": [
     "./scripts",
     "./test",
-    "./typechain-types"
+    "./typechain-types",
+    "utils/deploy.params.ts",
+    "utils/localhardhat.chainid.ts",
+    "utils/verify.ts"
   ],
-  "files": [
-    "./hardhat.config.ts"
-  ]
+  "files": ["./hardhat.config.ts"]
 }
