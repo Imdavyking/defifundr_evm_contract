@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-// Uncomment this line to use console.log
-// import "hardhat/console.sol";
-
+/**
+ * @title Lock
+ * @dev A time-locked vault contract with optimized gas usage
+ */
 contract Lock {
-    uint public unlockTime;
-    address payable public owner;
+    // Using immutable for variables that won't change after construction
+    uint256 public immutable unlockTime;
+    address payable public immutable owner;
 
-    event Withdrawal(uint amount, uint when);
+    event Withdrawal(uint256 amount, uint256 when);
 
-    constructor(uint _unlockTime) payable {
+    /**
+     * @dev Sets the unlock time and owner for this contract
+     * @param _unlockTime Time when funds can be withdrawn (in unix timestamp)
+     */
+    constructor(uint256 _unlockTime) payable {
         require(
             block.timestamp < _unlockTime,
             "Unlock time should be in the future"
@@ -20,15 +26,30 @@ contract Lock {
         owner = payable(msg.sender);
     }
 
+    /**
+     * @dev Withdraw all funds from the contract
+     * Requirements:
+     * - Current time must be after unlock time
+     * - Caller must be the owner
+     */
     function withdraw() public {
-        // Uncomment this line, and the import of "hardhat/console.sol", to print a log in your terminal
-        // console.log("Unlock time is %o and block timestamp is %o", unlockTime, block.timestamp);
-
-        require(block.timestamp >= unlockTime, "You can't withdraw yet");
-        require(msg.sender == owner, "You aren't the owner");
-
-        emit Withdrawal(address(this).balance, block.timestamp);
-
-        owner.transfer(address(this).balance);
+        // Check time condition with original error message
+        if (block.timestamp < unlockTime) {
+            revert("You can't withdraw yet");
+        }
+        
+        // Check ownership with original error message
+        if (msg.sender != owner) {
+            revert("You aren't the owner");
+        }
+        
+        uint256 amount = address(this).balance;
+        
+        // Emit event before state change to follow checks-effects-interactions pattern
+        emit Withdrawal(amount, block.timestamp);
+        
+        // Transfer funds to owner using a more gas-efficient approach
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
     }
 }

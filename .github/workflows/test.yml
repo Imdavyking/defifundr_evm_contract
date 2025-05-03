@@ -1,0 +1,22 @@
+name: Run Tests & Gas Report
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      REPORT_GAS: "true"
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Hardhat tests with gas reporter
+        run: npx hardhat test

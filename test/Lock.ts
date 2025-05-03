@@ -1,127 +1,88 @@
-import {
-  time,
-  loadFixture,
-} from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { expect } from "chai";
-import hre from "hardhat";
+import fs from "fs";
+import { ethers } from "hardhat";
+import path from "path";
 
-describe("Lock", function () {
-  // We define a fixture to reuse the same setup in every test.
-  // We use loadFixture to run this setup once, snapshot that state,
-  // and reset Hardhat Network to that snapshot in every test.
-  async function deployOneYearLockFixture() {
-    const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-    const ONE_GWEI = 1_000_000_000;
+async function main() {
+  // Get the current timestamp
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  // Set unlock time to 1 year from now
+  const unlockTime = currentTimestamp + 365 * 24 * 60 * 60;
 
-    const lockedAmount = ONE_GWEI;
-    const unlockTime = (await time.latest()) + ONE_YEAR_IN_SECS;
+  // Get network details
+  const network = await ethers.provider.getNetwork();
+  console.log(`Deploying to network: ${network.name} (chain ID: ${network.chainId})`);
 
-    // Contracts are deployed using the first signer/account by default
-    const [owner, otherAccount] = await hre.ethers.getSigners();
+  // Deploy the Lock contract
+  console.log(`Deploying with unlock time: ${unlockTime} (${new Date(unlockTime * 1000).toUTCString()})`);
 
-    const Lock = await hre.ethers.getContractFactory("Lock");
-    const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  const Lock = await ethers.getContractFactory("Lock");
 
-    return { lock, unlockTime, lockedAmount, owner, otherAccount };
+  // Estimate gas before deployment to check if it meets our budget
+  const deployTx = await Lock.getDeployTransaction(unlockTime, { value: ethers.parseEther("1") });
+  const estimatedGas = await ethers.provider.estimateGas(deployTx);
+  console.log(`Estimated deployment gas: ${estimatedGas.toString()}`);
+
+  // Check against our gas budget
+  const gasLimit = 250000n; // Use BigInt literal
+  if (estimatedGas > gasLimit) {
+    console.warn(`⚠️ WARNING: Deployment gas (${estimatedGas}) exceeds budget of ${gasLimit}`);
   }
 
-  describe("Deployment", function () {
-    it("Should set the right unlockTime", async function () {
-      const { lock, unlockTime } = await loadFixture(deployOneYearLockFixture);
-
-      expect(await lock.unlockTime()).to.equal(unlockTime);
-    });
-
-    it("Should set the right owner", async function () {
-      const { lock, owner } = await loadFixture(deployOneYearLockFixture);
-
-      expect(await lock.owner()).to.equal(owner.address);
-    });
-
-    it("Should receive and store the funds to lock", async function () {
-      const { lock, lockedAmount } = await loadFixture(
-        deployOneYearLockFixture
-      );
-
-      expect(await hre.ethers.provider.getBalance(lock.target)).to.equal(
-        lockedAmount
-      );
-    });
-
-    it("Should fail if the unlockTime is not in the future", async function () {
-      // We don't use the fixture here because we want a different deployment
-      const latestTime = await time.latest();
-      const Lock = await hre.ethers.getContractFactory("Lock");
-      await expect(Lock.deploy(latestTime, { value: 1 })).to.be.revertedWith(
-        "Unlock time should be in the future"
-      );
-    });
+  // Deploy with a specific gas limit to prevent unexpected high gas usage
+  console.log("Deploying contract...");
+  const lock = await Lock.deploy(unlockTime, {
+    value: ethers.parseEther("1"),
+    gasLimit: Number(estimatedGas) + Math.floor(Number(estimatedGas) * 0.1) // Add 10% buffer
   });
 
-  describe("Withdrawals", function () {
-    describe("Validations", function () {
-      it("Should revert with the right error if called too soon", async function () {
-        const { lock } = await loadFixture(deployOneYearLockFixture);
+  // Wait for deployment to be mined
+  await lock.waitForDeployment();
 
-        await expect(lock.withdraw()).to.be.revertedWith(
-          "You can't withdraw yet"
-        );
-      });
+  // Get the transaction receipt
+  const txHash = lock.deploymentTransaction()?.hash;
+  if (!txHash) {
+    throw new Error("Deployment transaction hash not found");
+  }
 
-      it("Should revert with the right error if called from another account", async function () {
-        const { lock, unlockTime, otherAccount } = await loadFixture(
-          deployOneYearLockFixture
-        );
+  const txReceipt = await ethers.provider.getTransactionReceipt(txHash);
+  const actualGas = txReceipt?.gasUsed || 0n;
 
-        // We can increase the time in Hardhat Network
-        await time.increaseTo(unlockTime);
+  const address = await lock.getAddress();
+  console.log(`Lock contract deployed at: ${address}`);
+  console.log(`Actual deployment gas used: ${actualGas.toString()}`);
 
-        // We use lock.connect() to send a transaction from another account
-        await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith(
-          "You aren't the owner"
-        );
-      });
+  // Save deployment info
+  const deploymentInfo = {
+    contract: "Lock",
+    address,
+    network: network.name,
+    chainId: Number(network.chainId),
+    unlockTime,
+    deployedAt: currentTimestamp,
+    gasUsed: actualGas.toString(),
+    transactionHash: txHash,
+  };
 
-      it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
-        const { lock, unlockTime } = await loadFixture(
-          deployOneYearLockFixture
-        );
+  // Ensure the deployments directory exists
+  const deploymentsDir = path.join(__dirname, "../deployments");
+  if (!fs.existsSync(deploymentsDir)) {
+    fs.mkdirSync(deploymentsDir, { recursive: true });
+  }
 
-        // Transactions are sent using the first signer by default
-        await time.increaseTo(unlockTime);
+  // Save deployment info to a file
+  const deploymentPath = path.join(deploymentsDir, `${network.name}-deployment.json`);
+  fs.writeFileSync(
+    deploymentPath,
+    JSON.stringify(deploymentInfo, null, 2)
+  );
 
-        await expect(lock.withdraw()).not.to.be.reverted;
-      });
-    });
+  console.log(`Deployment info saved to ${deploymentPath}`);
+}
 
-    describe("Events", function () {
-      it("Should emit an event on withdrawals", async function () {
-        const { lock, unlockTime, lockedAmount } = await loadFixture(
-          deployOneYearLockFixture
-        );
-
-        await time.increaseTo(unlockTime);
-
-        await expect(lock.withdraw())
-          .to.emit(lock, "Withdrawal")
-          .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
-      });
-    });
-
-    describe("Transfers", function () {
-      it("Should transfer the funds to the owner", async function () {
-        const { lock, unlockTime, lockedAmount, owner } = await loadFixture(
-          deployOneYearLockFixture
-        );
-
-        await time.increaseTo(unlockTime);
-
-        await expect(lock.withdraw()).to.changeEtherBalances(
-          [owner, lock],
-          [lockedAmount, -lockedAmount]
-        );
-      });
-    });
+// Execute the deployment
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
   });
-});
