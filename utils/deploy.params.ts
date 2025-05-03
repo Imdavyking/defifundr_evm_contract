@@ -5,6 +5,9 @@ type DeployParams = {
   };
 };
 const deployParams: DeployParams = {
+  hardhat: {
+    unlockTime: Math.floor(Date.now() / 1000) + 60 * 60, // +1 hour
+  },
   localhost: {
     unlockTime: Math.floor(Date.now() / 1000) + 60 * 60, // +1 hour
   },

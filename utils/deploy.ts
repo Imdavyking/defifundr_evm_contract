@@ -2,8 +2,7 @@
 import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
 import { verify } from "./verify";
-import { DeployFunction } from "@openzeppelin/hardhat-upgrades/dist/deploy-proxy";
-import { BaseContract, ContractFactory } from "ethers";
+import { BaseContract } from "ethers";
 
 type DeployOptions = {
   contractName: string;
@@ -13,7 +12,7 @@ type DeployOptions = {
   initializer?: string;
 };
 
-export async function deployContract({
+export async function deployContractUtil({
   contractName,
   args = [],
   value,
@@ -25,11 +24,14 @@ export async function deployContract({
   const timestamp = Math.floor(Date.now() / 1000);
 
   let contract: BaseContract;
+
   if (useProxy) {
     contract = await upgrades.deployProxy(factory, args, { initializer });
   } else {
     contract = await factory.deploy(...args, value ? { value } : {});
   }
+
+  await contract.waitForDeployment();
 
   const address = await contract.getAddress();
   const deploymentTx = contract.deploymentTransaction();

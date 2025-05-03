@@ -1,10 +1,10 @@
 {
   "contract": "Lock",
   "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "network": "hardhat",
+  "networkName": "hardhat",
   "chainId": 31337,
-  "unlockTime": 1777846922,
-  "deployedAt": 1746310922,
+  "unlockTime": 1746316759,
+  "deployedAt": 1746313159,
   "gasUsed": "206157",
-  "transactionHash": "0x46b7ff47c77193753dfa31e453900f6d16fa6a9b807533b8f5eaf9fd6fd054f1"
+  "transactionHash": "0x70ee497cf2550a4d602fda25dbf225cac633e59185732bddd63ebac00d48d0e8"
 }

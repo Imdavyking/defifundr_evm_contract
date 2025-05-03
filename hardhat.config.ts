@@ -63,11 +63,11 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      mainNetwork: API_SCAN_VERIFIER_KEY,
+      sepolia: API_SCAN_VERIFIER_KEY,
     },
     customChains: [
       {
-        network: "mainNetwork",
+        network: "sepolia",
         chainId: +CHAIN_ID!,
         urls: {
           apiURL: API_URL,
