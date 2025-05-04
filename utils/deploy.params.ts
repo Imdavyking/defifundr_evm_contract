@@ -16,7 +16,7 @@ const deployParams: DeployParams = {
   },
   sepolia: {
     unlockTime: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // +1 day
-    useProxy: false,
+    useProxy: true,
   },
 };
 

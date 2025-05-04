@@ -9,6 +9,7 @@ type DeployOptions = {
   value?: bigint;
   useProxy?: boolean;
   initializer?: string;
+  confirmations?: number;
 };
 
 export async function deployContractUtil({
@@ -16,6 +17,7 @@ export async function deployContractUtil({
   args = [],
   value,
   useProxy = false,
+  confirmations = 6,
 }: DeployOptions) {
   const factory = await ethers.getContractFactory(contractName);
   const network = await ethers.provider.getNetwork();
@@ -47,16 +49,21 @@ export async function deployContractUtil({
 
   const address = await contract.getAddress();
   const deploymentTx = contract.deploymentTransaction();
-  const receipt = await deploymentTx?.wait();
+  const receipt = await deploymentTx?.wait(confirmations);
   const gasUsed = receipt?.gasUsed?.toString() || "0";
 
   console.log(`${contractName} deployed at: ${address}`);
 
   if (useProxy) {
+    const implAddress = await upgrades.erc1967.getImplementationAddress(
+      address
+    );
+    console.log(`Implementation deployed at: ${implAddress}`);
+    await verify(implAddress, []);
+    await verify(address, []);
   } else {
     await verify(address, args);
   }
-
   return {
     address,
     contract,
