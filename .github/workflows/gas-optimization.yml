@@ -2,13 +2,33 @@ name: Smart Contract Gas Usage Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
+#     COINMARKETCAP_API_KEY= # CoinMarketCap API key
+# REPORT_GAS="true" # true or false
+# API_SCAN_VERIFIER_KEY=CTDVKCJI4ZUMRA361UNB29C14X8M5CNZYQ
+# CHAIN_ID=11155111
+# CHAIN_BLOCKEXPLORER_URL=https://sepolia.etherscan.io/
+# RPC_URL=https://sepolia.drpc.org
+# API_URL=https://api-sepolia.etherscan.io/api
+# BROWSER_URL=https://sepolia.etherscan.io/
+# PRIVATE_KEY=e70e7ee6d520b36902916f181bca57e83cfe0f4628189c85c60dd6a950f1c6ff
 jobs:
   gas-optimization-tests:
     runs-on: ubuntu-latest
+    environment: DefiFunder
+    env:
+      REPORT_GAS: "true"
+      API_SCAN_VERIFIER_KEY: ${{secrets.API_SCAN_VERIFIER_KEY}}
+      CHAIN_ID: ${{vars.CHAIN_ID}}
+      CHAIN_BLOCKEXPLORER_URL: ${{vars.CHAIN_BLOCKEXPLORER_URL}}
+      RPC_URL: ${{vars.RPC_URL}}
+      API_URL: ${{vars.API_URL}}
+      BROWSER_URL: ${{vars.BROWSER_URL}}
+      PRIVATE_KEY: ${{secrets.PRIVATE_KEY}}
+
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 20.x
@@ -16,16 +36,16 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run gas usage tests
         run: REPORT_GAS=true npx hardhat test
-      
+
       - name: Check for gas usage regressions
         run: npx ts-node scripts/check-gas-regression.ts
-      
+
       - name: Upload gas report
         uses: actions/upload-artifact@v4
         with:

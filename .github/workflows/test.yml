@@ -5,8 +5,16 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: DefiFunder
     env:
       REPORT_GAS: "true"
+      API_SCAN_VERIFIER_KEY: ${{secrets.API_SCAN_VERIFIER_KEY}}
+      CHAIN_ID: ${{vars.CHAIN_ID}}
+      CHAIN_BLOCKEXPLORER_URL: ${{vars.CHAIN_BLOCKEXPLORER_URL}}
+      RPC_URL: ${{vars.RPC_URL}}
+      API_URL: ${{vars.API_URL}}
+      BROWSER_URL: ${{vars.BROWSER_URL}}
+      PRIVATE_KEY: ${{secrets.PRIVATE_KEY}}
     steps:
       - uses: actions/checkout@v3
 
