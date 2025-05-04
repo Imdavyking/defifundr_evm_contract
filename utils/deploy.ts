@@ -52,7 +52,10 @@ export async function deployContractUtil({
 
   console.log(`${contractName} deployed at: ${address}`);
 
-  await verify(address, args);
+  if (useProxy) {
+  } else {
+    await verify(address, args);
+  }
 
   return {
     address,

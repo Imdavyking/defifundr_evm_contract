@@ -1,0 +1,10 @@
+{
+  "contract": "Lock",
+  "address": "0x007985649C91Fa7325D773D8CB227cfe9D955819",
+  "networkName": "sepolia",
+  "chainId": 11155111,
+  "unlockTime": 1746447641,
+  "deployedAt": 1746361243,
+  "gasUsed": "206157",
+  "transactionHash": "0x7b71a35ee114a40c65f80af4a0ea9e2ace5cc6df08de6974a1daf1ec27109e04"
+}

@@ -14,13 +14,9 @@ const deployParams: DeployParams = {
     unlockTime: Math.floor(Date.now() / 1000) + 60 * 60, // +1 hour
     useProxy: true,
   },
-  goerli: {
+  sepolia: {
     unlockTime: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // +1 day
-    useProxy: true,
-  },
-  mainnet: {
-    unlockTime: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // +30 days
-    useProxy: true,
+    useProxy: false,
   },
 };
 

@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
     localhost: {
       chainId: 31337,
     },
-    mainNetwork: {
+    sepolia: {
       url: RPC_URL,
       accounts: [process.env.PRIVATE_KEY!],
       chainId: +CHAIN_ID!,
