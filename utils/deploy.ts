@@ -2,6 +2,7 @@
 import { ethers, upgrades } from "hardhat";
 import { verify } from "./verify";
 import { BaseContract } from "ethers";
+import { localHardhat } from "./localhardhat.chainid";
 
 type DeployOptions = {
   contractName: string;
@@ -22,6 +23,9 @@ export async function deployContractUtil({
   const factory = await ethers.getContractFactory(contractName);
   const network = await ethers.provider.getNetwork();
   const timestamp = Math.floor(Date.now() / 1000);
+  if (localHardhat.includes(Number(network.chainId))) {
+    confirmations = 1;
+  }
 
   let contract: BaseContract;
 
