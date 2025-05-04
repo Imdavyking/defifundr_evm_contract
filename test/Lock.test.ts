@@ -164,7 +164,7 @@ describe("Lock Contract Gas Optimization", function () {
 
   describe("Upgrade proxy implementation", function () {
     it("Should maintain functionality with proxy upgrade", async function () {
-      const { lock, unlockTime, owner, otherAccount, useProxy } =
+      const { lock, owner, useProxy } =
         await loadFixture(deployLockFixture);
 
       if (useProxy) {
