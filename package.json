@@ -13,6 +13,9 @@
     "lint": "solhint 'contracts/**/*.sol' && eslint . --ext .ts",
     "coverage": "hardhat coverage"
   },
+  "mocha": {
+    "timeout": 10000000
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
