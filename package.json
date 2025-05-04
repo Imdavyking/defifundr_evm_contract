@@ -9,6 +9,7 @@
     "compile": "hardhat compile",
     "check:gas": "ts-node scripts/check-gas-regression.ts",
     "deploy": "hardhat run scripts/deploy.ts",
+    "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
     "lint": "solhint 'contracts/**/*.sol' && eslint . --ext .ts",
     "coverage": "hardhat coverage"
   },
@@ -36,6 +37,8 @@
   },
   "dependencies": {
     "@openzeppelin/hardhat-upgrades": "^3.9.0",
+    "@openzeppelin/contracts": "^5.2.0",
+    "@openzeppelin/contracts-upgradeable": "^5.2.0",
     "abbrev": "^1.0.9",
     "abitype": "^1.0.8",
     "acorn": "^8.14.1",

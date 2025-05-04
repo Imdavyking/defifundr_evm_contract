@@ -1,6 +1,7 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-gas-reporter";
 import "@nomicfoundation/hardhat-verify";
+import "@openzeppelin/hardhat-upgrades";
 import dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 dotenv.config();

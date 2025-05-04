@@ -17,6 +17,6 @@
     "utils/deploy.params.ts",
     "utils/localhardhat.chainid.ts",
     "utils/verify.ts"
-  ],
+, "scripts/upgrade.proxy.ts"  ],
   "files": ["./hardhat.config.ts"]
 }

@@ -1,29 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * @title Lock
  * @dev A time-locked vault contract with optimized gas usage
  */
-contract Lock {
-    // Using immutable for variables that won't change after construction
-    uint256 public immutable unlockTime;
-    address payable public immutable owner;
+contract LockProxyV2 is UUPSUpgradeable, OwnableUpgradeable {
+    uint256 public unlockTime;
 
     event Withdrawal(uint256 amount, uint256 when);
 
-    /**
-     * @dev Sets the unlock time and owner for this contract
-     * @param _unlockTime Time when funds can be withdrawn (in unix timestamp)
-     */
-    constructor(uint256 _unlockTime) payable {
-        require(
-            block.timestamp < _unlockTime,
-            "Unlock time should be in the future"
-        );
-
-        unlockTime = _unlockTime;
-        owner = payable(msg.sender);
+    function initialize() public initializer {
+        __UUPSUpgradeable_init();
+        __Ownable_init(msg.sender);
     }
 
     /**
@@ -34,9 +25,10 @@ contract Lock {
      */
     function withdraw() public {
         // Check ownership with original error message
-        if (msg.sender != owner) {
+        if (msg.sender != owner()) {
             revert("You aren't the owner");
         }
+
         // Check time condition with original error message
         if (block.timestamp < unlockTime) {
             revert("You can't withdraw yet");
@@ -48,7 +40,15 @@ contract Lock {
         emit Withdrawal(amount, block.timestamp);
 
         // Transfer funds to owner using a more gas-efficient approach
-        (bool success, ) = owner.call{value: amount}("");
+        (bool success, ) = payable(owner()).call{value: amount}("");
         require(success, "Transfer failed");
     }
+
+    function version() public pure returns (string memory) {
+        return "V2";
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 }

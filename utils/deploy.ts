@@ -1,5 +1,4 @@
 // utils/deploy.ts
-import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
 import { verify } from "./verify";
 import { BaseContract } from "ethers";
@@ -17,7 +16,6 @@ export async function deployContractUtil({
   args = [],
   value,
   useProxy = false,
-  initializer = "initialize",
 }: DeployOptions) {
   const factory = await ethers.getContractFactory(contractName);
   const network = await ethers.provider.getNetwork();
@@ -26,8 +24,22 @@ export async function deployContractUtil({
   let contract: BaseContract;
 
   if (useProxy) {
-    contract = await upgrades.deployProxy(factory, args, { initializer });
+    contract = await upgrades.deployProxy(factory, args);
   } else {
+    const deployTx = await factory.getDeployTransaction(
+      ...args,
+      value ? { value } : {}
+    );
+    const estimatedGas = await ethers.provider.estimateGas(deployTx);
+    console.log(`Estimated deployment gas: ${estimatedGas.toString()}`);
+
+    // Check against our gas budget
+    const gasLimit = 250000n; // Use BigInt literal
+    if (estimatedGas > gasLimit) {
+      console.warn(
+        `⚠️ WARNING: Deployment gas (${estimatedGas}) exceeds budget of ${gasLimit}`
+      );
+    }
     contract = await factory.deploy(...args, value ? { value } : {});
   }
 
